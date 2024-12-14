@@ -53,8 +53,8 @@
             <Package2 class="h-6 w-6" />
             <span class="sr-only">Acme Inc</span>
           </a>
-          <a href="##" class="text-muted-foreground hover:text-foreground"> Dashboard </a>
-          <a href="##" class="text-foreground"> Orders </a>
+          <a href="/dashboard" class="text-muted-foreground hover:text-foreground"> Dashboard </a>
+          <a href="/orders" class="text-foreground"> Orders </a>
      
         </nav>
       </Sheet.Content>

@@ -198,3 +198,9 @@
     </div>
   </main>
 </div>
+
+<div class="fixed bottom-2 w-full flex justify-center items-center">
+  <button class="px-4 py-2 font-semibold mx-2 bg-primary shadow-md w-full lg:w-auto text-white rounded-xl">Add Products</button>
+</div>
+
+<!-- ` -->

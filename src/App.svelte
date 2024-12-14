@@ -15,6 +15,5 @@
     <Route path="/products" component={Products}/>
 </Router>
 
-this page better be good
 
 <style></style>
