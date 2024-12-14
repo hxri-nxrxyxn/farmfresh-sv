@@ -3,8 +3,8 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
 
-    let username = 'hey';
-  let password = 'there';
+    let username = 'newtest';
+  let password = 'test';
   let isLoggedIn = false;
   let errorMessage = '';
 
