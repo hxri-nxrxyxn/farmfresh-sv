@@ -3,14 +3,18 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
 
-    let username = '';
-  let password = '';
+    let username = 'hey';
+  let password = 'there';
   let isLoggedIn = false;
   let errorMessage = '';
 
   async function login() {
+    console.log(JSON.stringify({
+    username,
+    password
+  }));
     try {
-      const response = await fetch('http://127.0.0.1:8080/v1/users', {
+      const response = await fetch('http://127.0.0.1:8080/v1/users/login', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
