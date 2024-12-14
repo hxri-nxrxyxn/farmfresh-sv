@@ -10,7 +10,7 @@
 
   async function login() {
     try {
-      const response = await fetch('http://192.168.63.140:8080/v1/users', {
+      const response = await fetch('http://127.0.0.1:8080/v1/users', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
