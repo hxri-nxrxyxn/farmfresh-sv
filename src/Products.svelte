@@ -19,10 +19,29 @@
   import * as Avatar from "$lib/components/ui/avatar/index.js";
   import { Input } from "$lib/components/ui/input/index.js";
   import * as Sheet from "$lib/components/ui/sheet/index.js";
-</script>
+  import { onMount } from 'svelte';
+
+  let data = [];
+
+onMount(async () => {
+  const response = await fetch('127.0.0.1:8080/v1/products');
+  data = await response.json();
+});
 
 
-<div class="flex min-h-screen w-full flex-col">
+  </script>
+
+  {#await data}
+   <p>loading</p> 
+  {:then data} 
+   {#each data as item}
+   <p>
+    {item.product_id}
+   </p>
+   {/each} 
+  {/await}
+
+<div>
   <header class="bg-background sticky top-0 flex h-16 items-center gap-4 border-b px-4 md:px-6">
     <nav
       class="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6"
@@ -125,29 +144,32 @@
 				</Table.Row>
 			</Table.Header>
 			<Table.Body>
-				<Table.Row>
-					<Table.Cell class="hidden sm:table-cell">
-						<img
-							alt="Product"
-							class="aspect-square rounded-md object-cover"
-							height="64"
-							src="/images/placeholder.svg"
-							width="64"
-						/>
-					</Table.Cell>
-					<Table.Cell class="font-medium">Luminous VR Headset</Table.Cell>
-					<Table.Cell>
-						<Badge variant="outline">Active</Badge>
-					</Table.Cell>
-					<Table.Cell class="hidden md:table-cell">$199.99</Table.Cell>
-					<Table.Cell class="hidden md:table-cell">30</Table.Cell>
-					<Table.Cell class="hidden md:table-cell">
-						2024-02-14 02:14 PM
-					</Table.Cell>
-					<Table.Cell>
-                        <Button variant="outline">Add to Cart</Button>
-					</Table.Cell>
-				</Table.Row>
+        {#each data as d}
+      <Table.Row>
+            <Table.Cell class="hidden sm:table-cell">
+              <img
+                alt="Product"
+                class="aspect-square rounded-md object-cover"
+                height="64"
+                src="/images/placeholder.svg"
+                width="64"
+              />
+            </Table.Cell>
+            <Table.Cell class="font-medium">d.product_id</Table.Cell>
+            <Table.Cell>
+              <Badge variant="outline">d.product_name</Badge>
+            </Table.Cell>
+            <Table.Cell class="hidden md:table-cell">$199.99</Table.Cell>
+            <Table.Cell class="hidden md:table-cell">30</Table.Cell>
+            <Table.Cell class="hidden md:table-cell">
+              2024-02-14 02:14 PM
+            </Table.Cell>
+            <Table.Cell>
+                          <Button variant="outline">Add to Cart</Button>
+            </Table.Cell>
+          </Table.Row>     
+        {/each}
+				
 			</Table.Body>
 		</Table.Root>
 	</Card.Content>

@@ -3,10 +3,9 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
 
-    let username = 'newtest';
-  let password = 'test';
+  let username = $state('');
+  let password = $state('');
   let isLoggedIn = false;
-  let errorMessage = '';
 
   let data = {
   "username": username,
@@ -26,9 +25,12 @@
         headers: {
           'Content-Type': 'application/json',
         },
-        mode: 'no-cors',
-        body: jsonData,
-      });
+
+        body: JSON.stringify({
+          username,
+          password
+        })
+      })
 
       console.log("Data ",jsonData);
       console.log(response);
@@ -39,21 +41,28 @@
         const data = await response.json();
         // Handle successful login, e.g., set authentication token, redirect
         isLoggedIn = true;
-        errorMessage = '';
       } else {
+<<<<<<< HEAD
         console.log("hai 1");
         //const errorData = await response.json();
         console.log("hai 2");
         //errorMessage = errorData.message || 'Login failed';
         errorMessage = 'Login failed';
+=======
+        const errorData = await response.json();
+>>>>>>> 50bced5f8bddd412c54f02d4941135f4f965dc4d
       }
     } catch (error) {
       console.log("SHHHHH");
       console.error('Error logging in:', error);
-      errorMessage = 'An error occurred during login.';
     }
   }
+<<<<<<< HEAD
   //login()
+=======
+
+
+>>>>>>> 50bced5f8bddd412c54f02d4941135f4f965dc4d
   </script>
 
   <button id="s" onclick={login}>heyy</button>
@@ -70,17 +79,17 @@
         <div class="grid gap-4">
           <div class="grid gap-2">
             <Label for="phone">Phone</Label>
-            <Input id="email" type="phone" placeholder="+91 99952 83835" required />
+            <Input id="email" type="name" bind:value={username} placeholder="+91 99952 83835" required />
           </div>
           <div class="grid gap-2">
             <div class="flex items-center">
-              <Label for="password">Password</Label>
+              <Label for="password" id="getpass">Password</Label>
             </div>
             <Input id="password" type="password" required />
           </div>
           <a href="/dashboard">
-          <Button type="submit" class="w-full">Login</Button>
-          </a>
+          <Button {onclick} type="submit" class="w-full">Login</Button>
+        </a>
         </div>
         <div class="mt-4 text-center text-sm">
           Don&apos;t have an account?
