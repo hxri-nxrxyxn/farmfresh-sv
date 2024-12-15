@@ -3,10 +3,9 @@
     import { Input } from "$lib/components/ui/input/index.js";
     import { Label } from "$lib/components/ui/label/index.js";
 
-    let username = 'newtest';
-  let password = 'test';
+  let username = $state('');
+  let password = $state('');
   let isLoggedIn = false;
-  let errorMessage = '';
 
   async function login() {
     console.log(JSON.stringify({
@@ -23,23 +22,21 @@
           username,
           password
         })
-      });
+      })
 
       if (response.ok) {
         const data = await response.json();
         // Handle successful login, e.g., set authentication token, redirect
         isLoggedIn = true;
-        errorMessage = '';
       } else {
         const errorData = await response.json();
-        errorMessage = errorData.message || 'Login failed';
       }
     } catch (error) {
       console.error('Error logging in:', error);
-      errorMessage = 'An error occurred during login.';
     }
   }
-  login()
+
+
   </script>
   
   <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
@@ -54,17 +51,17 @@
         <div class="grid gap-4">
           <div class="grid gap-2">
             <Label for="phone">Phone</Label>
-            <Input id="email" type="phone" placeholder="+91 99952 83835" required />
+            <Input id="email" type="name" bind:value={username} placeholder="+91 99952 83835" required />
           </div>
           <div class="grid gap-2">
             <div class="flex items-center">
-              <Label for="password">Password</Label>
+              <Label for="password" id="getpass">Password</Label>
             </div>
             <Input id="password" type="password" required />
           </div>
           <a href="/dashboard">
-          <Button type="submit" class="w-full">Login</Button>
-          </a>
+          <Button {onclick} type="submit" class="w-full">Login</Button>
+        </a>
         </div>
         <div class="mt-4 text-center text-sm">
           Don&apos;t have an account?
