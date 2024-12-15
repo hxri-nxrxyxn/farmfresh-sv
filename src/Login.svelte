@@ -12,9 +12,6 @@
   "password": password
 };
 
-
-
-
   async function login() {
     let jsonData = JSON.stringify(data);
     
@@ -35,34 +32,17 @@
       console.log("Data ",jsonData);
       console.log(response);
       isLoggedIn = true;
-      errorMessage = '';
 
       if (response.ok) {
         const data = await response.json();
         // Handle successful login, e.g., set authentication token, redirect
         isLoggedIn = true;
-      } else {
-<<<<<<< HEAD
-        console.log("hai 1");
-        //const errorData = await response.json();
-        console.log("hai 2");
-        //errorMessage = errorData.message || 'Login failed';
-        errorMessage = 'Login failed';
-=======
-        const errorData = await response.json();
->>>>>>> 50bced5f8bddd412c54f02d4941135f4f965dc4d
       }
     } catch (error) {
       console.log("SHHHHH");
       console.error('Error logging in:', error);
     }
   }
-<<<<<<< HEAD
-  //login()
-=======
-
-
->>>>>>> 50bced5f8bddd412c54f02d4941135f4f965dc4d
   </script>
 
   <button id="s" onclick={login}>heyy</button>
