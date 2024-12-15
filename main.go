@@ -11,316 +11,265 @@ import (
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/joho/godotenv"
-	_ "github.com/joho/godotenv"
 )
 
 func init() {
 	err := godotenv.Load(".env")
 	if err != nil {
-		panic(err)
+		panic("Error loading .env file")
 	}
 }
 
-func connect_database() (*sql.DB, error) {
+func connectDatabase() (*sql.DB, error) {
 	connect := os.Getenv("CONNECT")
 	db, err := sql.Open("mysql", connect)
 	if err != nil {
-		panic(err)
+		return nil, err
 	}
 	fmt.Println("Connected Successfully")
 	return db, nil
 }
 
-type users struct {
-	User_id    int    `json:"user_id"`
-	Username   string `json:"username"`
-	Password   string `json:"password"`
-	First_name string `json:"first_name"`
-	Last_name  string `json:"last_name"`
-	Email      string `json:"email"`
-	Phone      string `json:"phone"`
-	Address    string `json:"address"`
-	User_type  string `json:"user_type"`
+type User struct {
+	UserID    int    `json:"user_id"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	FirstName string `json:"first_name"`
+	LastName  string `json:"last_name"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	Address   string `json:"address"`
+	UserType  string `json:"user_type"`
 }
 
-type products struct {
-	Product_id          int     `json:"product_id"`
-	Farmer_id           int     `json:"farmer_id"`
-	Product_name        string  `json:"product_name"`
-	Product_description string  `json:"product_description"`
-	Category            string  `json:"category"`
-	Quantity            int     `json:"quantity"`
-	Price               float64 `json:"price"`
-	Image_url           string  `json:"image_url"`
-	Location            string  `json:"location"`
-	Status              string  `json:"status"`
-	Product_life        int     `json:"product_life"`
+type Product struct {
+	ProductID          int     `json:"product_id"`
+	FarmerID           int     `json:"farmer_id"`
+	ProductName        string  `json:"product_name"`
+	ProductDescription string  `json:"product_description"`
+	Category           string  `json:"category"`
+	Quantity           int     `json:"quantity"`
+	Price              float64 `json:"price"`
+	ImageURL           string  `json:"image_url"`
+	Location           string  `json:"location"`
+	Status             string  `json:"status"`
+	ProductLife        int     `json:"product_life"`
 }
 
-type orders struct {
-	Order_id     int     `json:"order_id"`
-	Buyer_id     int     `json:"buyer_id"`
-	Order_date   string  `json:"order_date"`
-	Total_amount float64 `json:"total_amount"`
-	Status       string  `json:"status"`
+type Order struct {
+	OrderID     int     `json:"order_id"`
+	BuyerID     int     `json:"buyer_id"`
+	OrderDate   string  `json:"order_date"`
+	TotalAmount float64 `json:"total_amount"`
+	Status      string  `json:"status"`
 }
 
-type order_items struct {
-	Order_item_id int     `json:"order_item_id"`
-	Order_id      int     `json:"order_id"`
-	Product_id    int     `json:"product_id"`
-	Quantity      int     `json:"quantity"`
-	Unit_price    float64 `json:"unit_price"`
+type OrderItem struct {
+	OrderItemID int     `json:"order_item_id"`
+	OrderID     int     `json:"order_id"`
+	ProductID   int     `json:"product_id"`
+	Quantity    int     `json:"quantity"`
+	UnitPrice   float64 `json:"unit_price"`
 }
 
 func register(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	var newuser users
-	register_query := os.Getenv("REGISTER_QUERY")
-	err := json.NewDecoder(r.Body).Decode(&newuser)
+	var newUser User
+	registerQuery := os.Getenv("REGISTER_QUERY")
+	err := json.NewDecoder(r.Body).Decode(&newUser)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
 	}
-	_, err = db.Exec(register_query, newuser.Username, newuser.Password, newuser.First_name, newuser.Last_name, newuser.Email, newuser.Phone, newuser.Address, newuser.User_type)
+	_, err = db.Exec(registerQuery, newUser.Username, newUser.Password, newUser.FirstName, newUser.LastName, newUser.Email, newUser.Phone, newUser.Address, newUser.UserType)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Error during registration", http.StatusInternalServerError)
+		return
 	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func login(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	var credentials users
-	var stored_password string
-	login_query := os.Getenv("LOGIN_QUERY")
+	fmt.Println("hai hhhhs")
+	var credentials User
+	var storedPassword string
+	fmt.Println("hai")
+	loginQuery := os.Getenv("LOGIN_QUERY")
 	err := json.NewDecoder(r.Body).Decode(&credentials)
+	fmt.Println(loginQuery)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Invalid request body", http.StatusBadRequest)
+		return
 	}
-	err = db.QueryRow(login_query, credentials.Username).Scan(&stored_password)
+	err = db.QueryRow(loginQuery, credentials.Username).Scan(&storedPassword)
 	if err != nil {
 		http.Error(w, "Unknown User", http.StatusNotFound)
+		return
 	}
-	if stored_password == credentials.Password {
+	fmt.Println(storedPassword, credentials.Password)
+	if storedPassword == credentials.Password {
 		w.WriteHeader(http.StatusOK)
 	} else {
-		w.WriteHeader((http.StatusUnauthorized))
+		w.WriteHeader(http.StatusUnauthorized)
 	}
 }
 
-func products_display(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	products_query := os.Getenv("PRODUCTS_QUERY")
-	rows, err := db.Query(products_query)
+func productsDisplay(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	productsQuery := os.Getenv("PRODUCTS_QUERY")
+	rows, err := db.Query(productsQuery)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Error retrieving products", http.StatusInternalServerError)
+		return
 	}
-	var productslist []products
+	defer rows.Close()
+
+	var productsList []Product
 	for rows.Next() {
 		var pid, fid, plife int
 		var pname, imgurl, status, location string
 		var price float64
 		err = rows.Scan(&pid, &pname, &fid, &price, &imgurl, &location, &status, &plife)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Error scanning products", http.StatusInternalServerError)
+			return
 		}
-		productslist = append(productslist, products{
-			Product_id:   pid,
-			Product_name: pname,
-			Farmer_id:    fid,
-			Price:        price,
-			Image_url:    imgurl,
-			Location:     location,
-			Status:       status,
-			Product_life: plife,
+		productsList = append(productsList, Product{
+			ProductID:   pid,
+			ProductName: pname,
+			FarmerID:    fid,
+			Price:       price,
+			ImageURL:    imgurl,
+			Location:    location,
+			Status:      status,
+			ProductLife: plife,
 		})
 	}
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(productslist)
-	defer rows.Close()
-
+	json.NewEncoder(w).Encode(productsList)
 }
 
-func products_display_farmerid(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+func productsDisplayFarmerID(db *sql.DB, w http.ResponseWriter, r *http.Request) {
 	urlPath := r.URL.Path
 	parts := strings.Split(urlPath, "/")
 	farmerID, _ := strconv.Atoi(parts[4])
+
 	switch r.Method {
 	case "GET":
-		farmer_products_query := os.Getenv("FARMERS_PRODUCT_QUERY")
-		rows, err := db.Query(farmer_products_query, farmerID)
+		farmerProductsQuery := os.Getenv("FARMERS_PRODUCT_QUERY")
+		rows, err := db.Query(farmerProductsQuery, farmerID)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Error retrieving products for farmer", http.StatusInternalServerError)
+			return
 		}
-		var farmer_products_list []products
+		defer rows.Close()
+
+		var farmerProductsList []Product
 		for rows.Next() {
 			var pid, fid, plife, quantity int
 			var pname, imgurl, status, location, pdesc, cat string
 			var price float64
 			err = rows.Scan(&pid, &fid, &pname, &pdesc, &cat, &quantity, &price, &imgurl, &location, &status, &plife)
 			if err != nil {
-				panic(err)
+				http.Error(w, "Error scanning farmer's products", http.StatusInternalServerError)
+				return
 			}
-			farmer_products_list = append(farmer_products_list, products{
-				Product_id:          pid,
-				Farmer_id:           fid,
-				Product_name:        pname,
-				Product_description: pdesc,
-				Category:            cat,
-				Quantity:            quantity,
-				Price:               price,
-				Image_url:           imgurl,
-				Location:            location,
-				Status:              status,
-				Product_life:        plife,
+			farmerProductsList = append(farmerProductsList, Product{
+				ProductID:          pid,
+				FarmerID:           fid,
+				ProductName:        pname,
+				ProductDescription: pdesc,
+				Category:           cat,
+				Quantity:           quantity,
+				Price:              price,
+				ImageURL:           imgurl,
+				Location:           location,
+				Status:             status,
+				ProductLife:        plife,
 			})
-
 		}
-
-		w.WriteHeader((http.StatusOK))
-		json.NewEncoder(w).Encode(farmer_products_list)
-		defer rows.Close()
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(farmerProductsList)
 	case "POST":
-		var newproduct products
-		new_product_query := os.Getenv("NEW_PRODUCT_QUERY")
-		err := json.NewDecoder(r.Body).Decode(&newproduct)
+		var newProduct Product
+		newProductQuery := os.Getenv("NEW_PRODUCT_QUERY")
+		err := json.NewDecoder(r.Body).Decode(&newProduct)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
 		}
-		_, err = db.Exec(new_product_query, newproduct.Farmer_id, newproduct.Product_name, newproduct.Product_description, newproduct.Category, newproduct.Quantity, newproduct.Price, newproduct.Image_url, newproduct.Location, newproduct.Status, newproduct.Product_life)
+		_, err = db.Exec(newProductQuery, newProduct.FarmerID, newProduct.ProductName, newProduct.ProductDescription, newProduct.Category, newProduct.Quantity, newProduct.Price, newProduct.ImageURL, newProduct.Location, newProduct.Status, newProduct.ProductLife)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Error inserting new product", http.StatusInternalServerError)
+			return
 		}
+		w.WriteHeader(http.StatusOK)
 	case "PUT":
-		var updateproduct products
-		update_product_query := os.Getenv("UPDATE_PRODUCT_QUERY")
-		err := json.NewDecoder(r.Body).Decode(&updateproduct)
+		var updateProduct Product
+		updateProductQuery := os.Getenv("UPDATE_PRODUCT_QUERY")
+		err := json.NewDecoder(r.Body).Decode(&updateProduct)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Invalid request body", http.StatusBadRequest)
+			return
 		}
-		_, err = db.Exec(update_product_query, updateproduct.Product_name, updateproduct.Product_description, updateproduct.Category, updateproduct.Quantity, updateproduct.Price, updateproduct.Image_url, updateproduct.Location, updateproduct.Status, updateproduct.Product_life, farmerID)
+		_, err = db.Exec(updateProductQuery, updateProduct.ProductName, updateProduct.ProductDescription, updateProduct.Category, updateProduct.Quantity, updateProduct.Price, updateProduct.ImageURL, updateProduct.Location, updateProduct.Status, updateProduct.ProductLife, farmerID)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Error updating product", http.StatusInternalServerError)
+			return
 		}
+		w.WriteHeader(http.StatusOK)
 	case "DELETE":
-		delete_product_query := os.Getenv("DELETE_PRODUCT_QUERY")
-		_, err := db.Exec(delete_product_query, farmerID)
+		deleteProductQuery := os.Getenv("DELETE_PRODUCT_QUERY")
+		_, err := db.Exec(deleteProductQuery, farmerID)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Error deleting product", http.StatusInternalServerError)
+			return
 		}
+		w.WriteHeader(http.StatusOK)
 	}
 }
 
-func ordersbybuyer(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	urlpath := r.URL.Path
-	parts := strings.Split(urlpath, "/")
+func ordersByBuyer(db *sql.DB, w http.ResponseWriter, r *http.Request) {
+	urlPath := r.URL.Path
+	parts := strings.Split(urlPath, "/")
 	buyerID, _ := strconv.Atoi(parts[4])
-	buyer_order_query := os.Getenv("BUYER_ORDER_QUERY")
-	rows, err := db.Query(buyer_order_query, buyerID)
+
+	buyerOrderQuery := os.Getenv("BUYER_ORDER_QUERY")
+	rows, err := db.Query(buyerOrderQuery, buyerID)
 	if err != nil {
-		panic(err)
+		http.Error(w, "Error retrieving orders for buyer", http.StatusInternalServerError)
+		return
 	}
-	var buyer_orders_list []orders
+	defer rows.Close()
+
+	var buyerOrdersList []Order
 	for rows.Next() {
 		var oid, bid int
-		var order_date, status string
-		var t_amount float64
-		err = rows.Scan(&oid, &bid, &order_date, &t_amount, &status)
+		var orderDate, status string
+		var totalAmount float64
+		err = rows.Scan(&oid, &bid, &orderDate, &totalAmount, &status)
 		if err != nil {
-			panic(err)
+			http.Error(w, "Error scanning orders", http.StatusInternalServerError)
+			return
 		}
-		buyer_orders_list = append(buyer_orders_list, orders{
-			Order_id:     oid,
-			Buyer_id:     bid,
-			Order_date:   order_date,
-			Total_amount: t_amount,
-			Status:       status,
+		buyerOrdersList = append(buyerOrdersList, Order{
+			OrderID:     oid,
+			BuyerID:     bid,
+			OrderDate:   orderDate,
+			TotalAmount: totalAmount,
+			Status:      status,
 		})
 	}
 
-	w.WriteHeader((http.StatusOK))
-	json.NewEncoder(w).Encode(buyer_orders_list)
-	defer rows.Close()
-}
-
-func ordersbyfarmer(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	urlpath := r.URL.Path
-	parts := strings.Split(urlpath, "/")
-	farmerID, _ := strconv.Atoi(parts[4])
-	farmer_order_query := os.Getenv("FARMER_ORDER_QUERY")
-	rows, err := db.Query(farmer_order_query, farmerID)
-	if err != nil {
-		panic(err)
-	}
-	var farmer_orders_list []orders
-	for rows.Next() {
-		var oid, bid int
-		var order_date, status string
-		var t_amount float64
-		err = rows.Scan(&oid, &bid, &order_date, &t_amount, &status)
-		if err != nil {
-			panic(err)
-		}
-		farmer_orders_list = append(farmer_orders_list, orders{
-			Order_id:     oid,
-			Buyer_id:     bid,
-			Order_date:   order_date,
-			Total_amount: t_amount,
-			Status:       status,
-		})
-	}
-
-	w.WriteHeader((http.StatusOK))
-	json.NewEncoder(w).Encode(farmer_orders_list)
-	defer rows.Close()
-}
-
-func getorders(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	urlpath := r.URL.Path
-	parts := strings.Split(urlpath, "/")
-	orderID, _ := strconv.Atoi(parts[3])
-	order_query := os.Getenv("ORDER_QUERY")
-	rows, err := db.Query(order_query, orderID)
-	if err != nil {
-		panic(err)
-	}
-	var orders_list []orders
-	for rows.Next() {
-		var oid, bid int
-		var order_date, status string
-		var t_amount float64
-		err = rows.Scan(&oid, &bid, &order_date, &t_amount, &status)
-		if err != nil {
-			panic(err)
-		}
-		orders_list = append(orders_list, orders{
-			Order_id:     oid,
-			Buyer_id:     bid,
-			Order_date:   order_date,
-			Total_amount: t_amount,
-			Status:       status,
-		})
-	}
-	w.WriteHeader((http.StatusOK))
-	json.NewEncoder(w).Encode(orders_list)
-	defer rows.Close()
-}
-
-func postorders(db *sql.DB, w http.ResponseWriter, r *http.Request) {
-	var neworder order_items
-	new_order_query := os.Getenv("NEW_ORDER_QUERY")
-	err := json.NewDecoder(r.Body).Decode(&neworder)
-	if err != nil {
-		panic(err)
-	}
-	_, err = db.Exec(new_order_query, neworder.Order_id, neworder.Product_id, neworder.Quantity, neworder.Unit_price)
-	if err != nil {
-		panic(err)
-	}
-
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(buyerOrdersList)
 }
 
 func main() {
-	db, err := connect_database()
+	db, err := connectDatabase()
 	if err != nil {
 		panic(err)
 	}
+	defer db.Close()
+
 	http.HandleFunc("/v1/users/register", func(w http.ResponseWriter, r *http.Request) {
 		register(db, w, r)
 	})
@@ -328,27 +277,26 @@ func main() {
 		login(db, w, r)
 	})
 	http.HandleFunc("/v1/products", func(w http.ResponseWriter, r *http.Request) {
-		products_display(db, w, r)
+		productsDisplay(db, w, r)
 	})
-	http.HandleFunc("/v1/products/farmers/{farmer_id}", func(w http.ResponseWriter, r *http.Request) {
-		products_display_farmerid(db, w, r)
+	http.HandleFunc("/v1/products/farmer/", func(w http.ResponseWriter, r *http.Request) {
+		productsDisplayFarmerID(db, w, r)
 	})
-	http.HandleFunc("/v1/orders/buyer/{buyer_id}", func(w http.ResponseWriter, r *http.Request) {
-		ordersbybuyer(db, w, r)
+	http.HandleFunc("/v1/orders/", func(w http.ResponseWriter, r *http.Request) {
+		ordersByBuyer(db, w, r)
 	})
-	http.HandleFunc("/v1/orders/farmer/{farmer_id}", func(w http.ResponseWriter, r *http.Request) {
-		ordersbyfarmer(db, w, r)
-	})
-	http.HandleFunc("/v1/orders/{order_id}", func(w http.ResponseWriter, r *http.Request) {
-		getorders(db, w, r)
-	})
-	http.HandleFunc("/v1/orders", func(w http.ResponseWriter, r *http.Request) {
-		postorders(db, w, r)
-	})
+
+	// Allow CORS for all routes
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "http://localhost:5173")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE")
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 	})
+
+	fmt.Println("Server started at http://localhost:8080")
 	http.ListenAndServe(":8080", nil)
 }

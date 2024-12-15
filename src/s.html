@@ -1,7 +1,4 @@
-<script lang="ts">
-    import { Button } from "$lib/components/ui/button/index.js";
-    import { Input } from "$lib/components/ui/input/index.js";
-    import { Label } from "$lib/components/ui/label/index.js";
+<script>
 
     let username = 'newtest';
   let password = 'test';
@@ -14,26 +11,20 @@
 };
 
 
-
+let jsonData = JSON.stringify(data);
 
   async function login() {
-    let jsonData = JSON.stringify(data);
-    
-
+    console.log(JSON.stringify({
+    username,
+    password
+  }));
     try {
-      const response = await fetch('http://127.0.0.1:8080/v1/users/login/', {
+      const response = await fetch('http://127.0.0.1:8080/v1/users/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         mode: 'no-cors',
         body: jsonData,
       });
-
-      console.log("Data ",jsonData);
       console.log(response);
-      isLoggedIn = true;
-      errorMessage = '';
 
       if (response.ok) {
         const data = await response.json();
@@ -48,15 +39,12 @@
         errorMessage = 'Login failed';
       }
     } catch (error) {
-      console.log("SHHHHH");
       console.error('Error logging in:', error);
       errorMessage = 'An error occurred during login.';
     }
   }
-  //login()
+  login()
   </script>
-
-  <button id="s" onclick={login}>heyy</button>
   
   <div class="w-full lg:grid lg:min-h-[600px] lg:grid-cols-2 xl:min-h-[800px]">
     <div class="flex items-center justify-center py-12">
